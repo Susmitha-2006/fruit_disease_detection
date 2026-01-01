@@ -1,44 +1,72 @@
 import streamlit as st
 import numpy as np
-
-# Use headless OpenCV
 import cv2
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
-# --- Load the trained model ---
-# Make sure 'fruit_disease_model.h5' is uploaded in your repo
-model = load_model('fruit_disease_model.h5')
+# ------------------------------
+# Load trained model
+# ------------------------------
+model = load_model("fruit_disease_model.h5")
 
-# --- Define class names ---
+# ------------------------------
+# IMPORTANT:
+# Class order MUST match training folder order (alphabetical)
+# ------------------------------
 class_names = [
-    'apple_healthy', 'apple_black_rot', 'apple_blotch', 'apple_scab',
-    'mango_healthy', 'mango_anthracnose', 'mango_alternaria',
-    'mango_black_mold', 'mango_stem_rot'
+    "apple_black_rot",
+    "apple_blotch",
+    "apple_healthy",
+    "apple_scab",
+    "mango_alternaria",
+    "mango_anthracnose",
+    "mango_black_mold",
+    "mango_healthy",
+    "mango_stem_rot"
 ]
 
-# --- Streamlit UI ---
-st.title("🍎 Mango & Apple Fruit Disease Detection")
+# ------------------------------
+# Streamlit UI
+# ------------------------------
+st.set_page_config(page_title="Fruit Disease Detection", layout="centered")
+st.title("🍎🍋 Mango & Apple Fruit Disease Detection")
 
-uploaded_file = st.file_uploader("Upload an image of the fruit", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader(
+    "Upload a fruit image (JPG / PNG)",
+    type=["jpg", "jpeg", "png"]
+)
 
 if uploaded_file is not None:
-    # Convert uploaded file to OpenCV image
-    file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
-    image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    try:
+        # Convert uploaded image to OpenCV format
+        file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
+        image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
 
-    st.image(image_rgb, caption='Uploaded Image', use_column_width=True)
+        if image is None:
+            st.error("Invalid image file")
+        else:
+            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    # Preprocess the image for the model
-    img_resized = cv2.resize(image_rgb, (224, 224))  # change if your model expects another size
-    img_array = img_to_array(img_resized)
-    img_array = np.expand_dims(img_array, axis=0) / 255.0  # normalize to 0-1
+            # Show uploaded image
+            st.image(image_rgb, caption="Uploaded Image", use_column_width=True)
 
-    # Make prediction
-    predictions = model.predict(img_array)
-    class_idx = np.argmax(predictions[0])
-    confidence = predictions[0][class_idx]
+            # ------------------------------
+            # Preprocessing (same as training)
+            # ------------------------------
+            img = cv2.resize(image_rgb, (224, 224))  # CHANGE only if your model uses different size
+            img = img_to_array(img)
+            img = np.expand_dims(img, axis=0)
+            img = img / 255.0
 
-    st.write(f"**Prediction:** {class_names[class_idx]}")
-    st.write(f"**Confidence:** {confidence*100:.2f}%")
+            # ------------------------------
+            # Prediction
+            # ------------------------------
+            predictions = model.predict(img)
+            class_index = np.argmax(predictions)
+            confidence = predictions[0][class_index] * 100
+
+            st.success(f"Prediction: **{class_names[class_index]}**")
+            st.info(f"Confidence: **{confidence:.2f}%**")
+
+    except Exception as e:
+        st.error("Something went wrong while processing the image.")
