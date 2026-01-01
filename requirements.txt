@@ -1,15 +1,6 @@
-# Streamlit for the web app
-streamlit==1.25.0
-
-# OpenCV for image processing
-opencv-python==4.8.1.78
-
-# NumPy for numerical operations
-numpy==1.26.0
-
-# Pillow for image handling (compatible with Streamlit 1.25.0)
-pillow==9.5.0
-
-# TensorFlow and Keras for ML model
-tensorflow==2.14.0
-keras==2.14.0
+streamlit
+opencv-python
+numpy
+pillow
+tensorflow
+keras
