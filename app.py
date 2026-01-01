@@ -1,34 +1,37 @@
 import streamlit as st
-import cv2
 import numpy as np
+
+# Use headless OpenCV
+import cv2
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
-# Load your trained model
-model = load_model('fruit_disease_model.h5')  # <-- your model file
+# --- Load the trained model ---
+# Make sure 'fruit_disease_model.h5' is uploaded in your repo
+model = load_model('fruit_disease_model.h5')
 
-# Define class names (update if you have different classes)
+# --- Define class names ---
 class_names = [
     'apple_healthy', 'apple_black_rot', 'apple_blotch', 'apple_scab',
     'mango_healthy', 'mango_anthracnose', 'mango_alternaria',
     'mango_black_mold', 'mango_stem_rot'
 ]
 
+# --- Streamlit UI ---
 st.title("🍎 Mango & Apple Fruit Disease Detection")
 
-# Upload an image
 uploaded_file = st.file_uploader("Upload an image of the fruit", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Convert uploaded file to a NumPy array
+    # Convert uploaded file to OpenCV image
     file_bytes = np.frombuffer(uploaded_file.read(), np.uint8)
     image = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
     st.image(image_rgb, caption='Uploaded Image', use_column_width=True)
 
-    # Preprocess the image for your model
-    img_resized = cv2.resize(image_rgb, (224, 224))  # adjust size to your model input
+    # Preprocess the image for the model
+    img_resized = cv2.resize(image_rgb, (224, 224))  # change if your model expects another size
     img_array = img_to_array(img_resized)
     img_array = np.expand_dims(img_array, axis=0) / 255.0  # normalize to 0-1
 
